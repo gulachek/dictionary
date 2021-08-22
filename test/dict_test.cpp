@@ -108,3 +108,15 @@ BOOST_AUTO_TEST_CASE(ReadAlreadyConstructed)
 	BOOST_TEST(!d.read("hello", out));
 	BOOST_TEST(out == 3);
 }
+
+BOOST_AUTO_TEST_CASE(HasProperSize)
+{
+	dict d;
+	BOOST_TEST(d.size() == 0);
+
+	d.assign<int>("hello", 3);
+	BOOST_TEST(d.size() == 1);
+
+	d.assign<int>("goodbye", 4);
+	BOOST_TEST(d.size() == 2);
+}

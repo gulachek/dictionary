@@ -92,6 +92,9 @@ namespace gulachek
 				}
 			}
 
+			std::size_t size() const
+			{ return elems_.size(); }
+
 		private:
 			std::map<Key, gtree::mutable_tree> elems_;
 	};
