@@ -17,25 +17,57 @@ namespace gulachek
 	{
 		public:
 			using gtree_encoding = gtree::container_encoding;
-
 			basic_dictionary() = default;
 
 			template <typename MutableTree>
 			gtree::error gtree_encode(MutableTree &tr) const
 			{
-				return gtree::encode(elems_, tr);
+				tr.child_count(elems_.size());
+
+				std::size_t i = 0;
+				for (const auto &key_elem : elems_)
+				{
+					const auto &elem = key_elem.second;
+					if (auto err = gtree::encode(elem, tr.child(i)))
+						return err;
+					++i;
+				}
+
+				return {};
 			}
 
 			template <typename Tree>
 			gtree::error gtree_decode(Tree &&tr)
 			{
-				return gtree::decode(std::forward<Tree>(tr), elems_);
+				for (std::size_t i = 0; i < tr.child_count(); ++i)
+				{
+					Key k;
+					if (auto err = gtree::decode(tr.child(i), k))
+						return err;
+
+					if (auto err = gtree::decode(tr.child(i), elems_[k]))
+						return err;
+				}
+
+				return {};
 			}
 
 			template <typename T>
 			gtree::error assign(const Key &key, T &&val)
 			{
-				return gtree::encode(std::forward<T>(val), elems_[key]);
+				auto &elem = elems_[key];
+				if (auto err = gtree::encode(key, elem))
+					return err;
+
+				if (gtree::uses_value<T>::value)
+				{
+					elem.child_count(1);
+					return gtree::encode(std::forward<T>(val), elem.child(0));
+				}
+				else
+				{
+					return gtree::encode(std::forward<T>(val), elem);
+				}
 			}
 
 			template <typename T>
@@ -45,7 +77,19 @@ namespace gulachek
 				if (it == elems_.end())
 					return {"Key not found"};
 
-				return gtree::decode(it->second, val);
+				const auto &elem = it->second;
+
+				if (gtree::uses_value<T>::value)
+				{
+					if (elem.child_count() < 1)
+						return {"Expected child of element which uses_value"};
+
+					return gtree::decode(elem.child(0), val);
+				}
+				else
+				{
+					return gtree::decode(elem, val);
+				}
 			}
 
 		private:
