@@ -120,3 +120,29 @@ BOOST_AUTO_TEST_CASE(HasProperSize)
 	d.assign<int>("goodbye", 4);
 	BOOST_TEST(d.size() == 2);
 }
+
+BOOST_AUTO_TEST_CASE(AssignArbitraryValue)
+{
+	gt::mutable_tree tr;
+	gt::encode(3, tr);
+	dict d;
+	d.assign("val", tr, gt::optimization_type::value);
+
+	int n = 0;
+	d.read("val", n);
+	BOOST_TEST(n == 3);
+}
+
+BOOST_AUTO_TEST_CASE(AssignArbitraryContainer)
+{
+	std::vector<int> v = {1, 2, 3};
+
+	gt::mutable_tree tr;
+	gt::encode(v, tr);
+	dict d;
+	d.assign("container", tr, gt::optimization_type::container);
+
+	std::vector<int> out;
+	d.read("container", out);
+	BOOST_TEST(out == v, tt::per_element());
+}

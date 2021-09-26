@@ -6,6 +6,7 @@
 #include <gulachek/gtree/encoding/tree.hpp>
 #include <gulachek/gtree/encoding/string.hpp>
 #include <gulachek/gtree/encoding/class.hpp>
+#include <gulachek/gtree/encoding/optimization_type.hpp>
 
 #include <map>
 #include <string>
@@ -67,6 +68,28 @@ namespace gulachek
 				else
 				{
 					return gtree::encode(std::forward<T>(val), elem);
+				}
+			}
+
+			template <gtree::Tree Tr>
+			gtree::error assign(const Key &key, const Tr &val, gtree::optimization_type ot)
+			{
+				auto &elem = elems_[key];
+				if (auto err = gtree::encode(key, elem))
+					return err;
+
+				// this should be in gtree as an API
+				auto uses_value = ot == gtree::optimization_type::value ||
+					ot == gtree::optimization_type::hybrid;
+
+				if (uses_value)
+				{
+					elem.child_count(1);
+					return gtree::encode(val, elem.child(0));
+				}
+				else
+				{
+					return gtree::encode(val, elem);
 				}
 			}
 
