@@ -16,7 +16,7 @@ namespace gulachek
 	class basic_dictionary
 	{
 		public:
-			using gtree_encoding = gtree::container_encoding;
+			using gtree_encoding = gtree::manual_encoding;
 			basic_dictionary() = default;
 
 			template <typename MutableTree>
