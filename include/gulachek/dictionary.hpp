@@ -6,7 +6,6 @@
 #include <gulachek/gtree/encoding/tree.hpp>
 #include <gulachek/gtree/encoding/string.hpp>
 #include <gulachek/gtree/encoding/class.hpp>
-#include <gulachek/gtree/encoding/optimization_type.hpp>
 
 #include <map>
 #include <string>
@@ -36,12 +35,6 @@ namespace gulachek
 			gtree::error assign(const Key &key, T &&val)
 			{
 				return gtree::encode(std::forward<T>(val), elems_[key]);
-			}
-
-			template <gtree::Tree Tr>
-			gtree::error assign(const Key &key, const Tr &val, gtree::optimization_type ot)
-			{
-				return {"stop using this"};
 			}
 
 			template <typename T>
