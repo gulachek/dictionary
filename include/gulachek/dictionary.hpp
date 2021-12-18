@@ -23,74 +23,25 @@ namespace gulachek
 			template <typename MutableTree>
 			gtree::error gtree_encode(MutableTree &tr) const
 			{
-				tr.child_count(elems_.size());
-
-				std::size_t i = 0;
-				for (const auto &key_elem : elems_)
-				{
-					const auto &elem = key_elem.second;
-					if (auto err = gtree::encode(elem, tr.child(i)))
-						return err;
-					++i;
-				}
-
-				return {};
+				return gtree::encode(elems_, tr);
 			}
 
 			template <typename Tree>
 			gtree::error gtree_decode(Tree &&tr)
 			{
-				for (std::size_t i = 0; i < tr.child_count(); ++i)
-				{
-					Key k;
-					if (auto err = gtree::decode(tr.child(i), k))
-						return err;
-
-					if (auto err = gtree::decode(tr.child(i), elems_[k]))
-						return err;
-				}
-
-				return {};
+				return gtree::decode(std::forward<Tree>(tr), elems_);
 			}
 
 			template <typename T>
 			gtree::error assign(const Key &key, T &&val)
 			{
-				auto &elem = elems_[key];
-				if (auto err = gtree::encode(key, elem))
-					return err;
-
-				if (gtree::uses_value<T>::value)
-				{
-					elem.child_count(1);
-					return gtree::encode(std::forward<T>(val), elem.child(0));
-				}
-				else
-				{
-					return gtree::encode(std::forward<T>(val), elem);
-				}
+				return gtree::encode(std::forward<T>(val), elems_[key]);
 			}
 
 			template <gtree::Tree Tr>
 			gtree::error assign(const Key &key, const Tr &val, gtree::optimization_type ot)
 			{
-				auto &elem = elems_[key];
-				if (auto err = gtree::encode(key, elem))
-					return err;
-
-				// this should be in gtree as an API
-				auto uses_value = ot == gtree::optimization_type::value ||
-					ot == gtree::optimization_type::hybrid;
-
-				if (uses_value)
-				{
-					elem.child_count(1);
-					return gtree::encode(val, elem.child(0));
-				}
-				else
-				{
-					return gtree::encode(val, elem);
-				}
+				return {"stop using this"};
 			}
 
 			template <typename T>
@@ -102,17 +53,7 @@ namespace gulachek
 
 				const auto &elem = it->second;
 
-				if (gtree::uses_value<T>::value)
-				{
-					if (elem.child_count() < 1)
-						return {"Expected child of element which uses_value"};
-
-					return gtree::decode(elem.child(0), val);
-				}
-				else
-				{
-					return gtree::decode(elem, val);
-				}
+				return gtree::decode(elem, val);
 			}
 
 			std::size_t size() const
