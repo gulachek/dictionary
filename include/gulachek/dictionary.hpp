@@ -2,58 +2,83 @@
 #define GULACHEK_DICTIONARY_HPP
 
 #include <gulachek/gtree.hpp>
+#include <gulachek/gtree/flat_tree.hpp>
 #include <gulachek/gtree/encoding/map.hpp>
-#include <gulachek/gtree/encoding/tree.hpp>
 #include <gulachek/gtree/encoding/string.hpp>
-#include <gulachek/gtree/encoding/class.hpp>
 
 #include <map>
 #include <string>
+#include <sstream>
+#include <strstream>
 
 namespace gulachek
 {
 	template <typename Key>
 	class basic_dictionary
 	{
+		using map_type = std::map<Key, gtree::flat_tree>;
+
 		public:
-			using gtree_encoding = gtree::manual_encoding;
 			basic_dictionary() = default;
 
-			template <typename MutableTree>
-			gtree::error gtree_encode(MutableTree &tr) const
+			cause gtree_encode(gtree::tree_writer &w) const
 			{
-				return gtree::encode(elems_, tr);
+				return w.write(elems_);
 			}
 
-			template <typename Tree>
-			gtree::error gtree_decode(Tree &&tr)
+			cause gtree_decode(gtree::treeder &r)
 			{
-				return gtree::decode(std::forward<Tree>(tr), elems_);
+				gtree::decoding<map_type> dec{&elems_};
+				return dec.decode(r);
 			}
 
-			template <typename T>
-			gtree::error assign(const Key &key, T &&val)
+			template <gtree::encodable T>
+			cause assign(const Key &key, T &&val)
 			{
-				return gtree::encode(std::forward<T>(val), elems_[key]);
+				auto &tr = elems_[key];
+
+				if (auto err = tr.write(val))
+				{
+					cause wrap{"error writing value"};
+					if constexpr (cause_writable<Key>)
+					{
+						wrap << " for key " << key;
+					}
+					wrap.add_cause(err);
+					return wrap;
+				}
+
+				return {};
 			}
 
-			template <typename T>
-			gtree::error read(const Key &k, T &val) const
+			template <gtree::encodable T>
+			cause read(const Key &k, T *val) const
 			{
 				auto it = elems_.find(k);
 				if (it == elems_.end())
 					return {"Key not found"};
 
-				const auto &elem = it->second;
+				const auto &tr = it->second;
 
-				return gtree::decode(elem, val);
+				if (auto err = tr.read(val))
+				{
+					cause wrap{"error reading value"};
+					if constexpr (cause_writable<Key>)
+					{
+						wrap << " for key " << k;
+					}
+					wrap.add_cause(err);
+					return wrap;
+				}
+
+				return {};
 			}
 
 			std::size_t size() const
 			{ return elems_.size(); }
 
 		private:
-			std::map<Key, gtree::mutable_tree> elems_;
+			map_type elems_;
 	};
 
 	using dictionary = basic_dictionary<std::string>;

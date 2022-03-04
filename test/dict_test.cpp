@@ -14,6 +14,7 @@ namespace bd = boost::unit_test::data;
 
 #include <map>
 #include <vector>
+#include <sstream>
 
 namespace gt = gulachek::gtree;
 
@@ -25,11 +26,13 @@ BOOST_AUTO_TEST_CASE(EncodesToMapOfValues)
 	d.assign("foo", 0x006f6f66);
 	d.assign("bar", std::string{"bar"});
 
-	gt::mutable_tree tr;
-	gt::encode(d, tr);
+	std::stringstream ss;
+	auto err = gt::write(ss, d);
+	BOOST_REQUIRE(!err);
 
 	std::map<std::string, std::string> map;
-	gt::decode(tr, map);
+	ss.seekg(0, std::ios::beg);
+	gt::read(ss, &map);
 
 	BOOST_TEST(map["foo"] == "foo");
 	BOOST_TEST(map["bar"] == "bar");
@@ -41,62 +44,21 @@ BOOST_AUTO_TEST_CASE(DecodesFromMapOfValues)
 	map["foo"] = "foo";
 	map["bar"] = "bar";
 
-	gt::mutable_tree tr;
-	gt::encode(map, tr);
+	std::stringstream ss;
+	gt::write(ss, map);
 
 	dict d;
-	gt::decode(tr, d);
+	ss.seekg(0, std::ios::beg);
+	auto err = gt::read(ss, &d);
+
+	BOOST_REQUIRE(!err);
 
 	int foo; std::string bar;
-	BOOST_TEST(!d.read("foo", foo));
+	BOOST_TEST(!d.read("foo", &foo));
 	BOOST_TEST(foo == 0x006f6f66);
 
-	BOOST_TEST(!d.read("bar", bar));
+	BOOST_TEST(!d.read("bar", &bar));
 	BOOST_TEST(bar == "bar");
-}
-
-BOOST_AUTO_TEST_CASE(EncodesToMapOfContainers)
-{
-	using vec = std::vector<int>;
-	vec foo = {1, 2, 3};
-	vec bar = {4, 5, 6};
-
-	dict d;
-	d.assign("foo", foo);
-	d.assign("bar", bar);
-
-	gt::mutable_tree tr;
-	gt::encode(d, tr);
-
-	std::map<std::string, vec> map;
-	gt::decode(tr, map);
-
-	BOOST_TEST(map["foo"] == foo, tt::per_element());
-	BOOST_TEST(map["bar"] == bar, tt::per_element());
-}
-
-BOOST_AUTO_TEST_CASE(DecodesFromMapOfContainers)
-{
-	using vec = std::vector<int>;
-	vec foo = {1, 2, 3};
-	vec bar = {4, 5, 6};
-
-	std::map<std::string, vec> map;
-	map["foo"] = foo;
-	map["bar"] = bar;
-
-	gt::mutable_tree tr;
-	gt::encode(map, tr);
-
-	dict d;
-	gt::decode(tr, d);
-
-	vec f, b;
-	BOOST_TEST(!d.read("foo", f));
-	BOOST_TEST(f == foo, tt::per_element());
-
-	BOOST_TEST(!d.read("bar", b));
-	BOOST_TEST(b == bar, tt::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(ReadAlreadyConstructed)
@@ -105,7 +67,7 @@ BOOST_AUTO_TEST_CASE(ReadAlreadyConstructed)
 	d.assign<int>("hello", 3);
 
 	int out;
-	BOOST_TEST(!d.read("hello", out));
+	BOOST_TEST(!d.read("hello", &out));
 	BOOST_TEST(out == 3);
 }
 
