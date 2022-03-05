@@ -2,7 +2,6 @@
 #define GULACHEK_DICTIONARY_HPP
 
 #include <gulachek/gtree.hpp>
-#include <gulachek/gtree/translate.hpp>
 #include <gulachek/gtree/encoding/map.hpp>
 #include <gulachek/gtree/encoding/string.hpp>
 
@@ -37,7 +36,7 @@ namespace gulachek
 			{
 				auto &tr = elems_[key];
 
-				if (auto err = gtree::translate(val, &tr))
+				if (auto err = tr.write(val))
 				{
 					cause wrap{"error writing value"};
 					if constexpr (cause_writable<Key>)
