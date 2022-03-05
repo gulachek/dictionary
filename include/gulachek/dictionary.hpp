@@ -33,7 +33,7 @@ namespace gulachek
 			}
 
 			template <gtree::encodable T>
-			cause assign(const Key &key, T &&val)
+			cause assign(const Key &key, const T &val)
 			{
 				auto &tr = elems_[key];
 

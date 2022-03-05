@@ -38,6 +38,19 @@ BOOST_AUTO_TEST_CASE(EncodesToMapOfValues)
 	BOOST_TEST(map["bar"] == "bar");
 }
 
+BOOST_AUTO_TEST_CASE(AssignAnLvalueRef)
+{
+	int foo = 3;
+
+	dict d;
+	d.assign("foo", foo);
+
+	int out = 0;
+	d.read("foo", &out);
+
+	BOOST_TEST(out == 3);
+}
+
 BOOST_AUTO_TEST_CASE(DecodesFromMapOfValues)
 {
 	std::map<std::string, std::string> map;
