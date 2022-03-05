@@ -60,7 +60,7 @@ namespace gulachek
 
 				const auto &tr = it->second;
 
-				if (auto err = gtree::translate(tr, val))
+				if (auto err = tr.read(val))
 				{
 					cause wrap{"error reading value"};
 					if constexpr (cause_writable<Key>)
