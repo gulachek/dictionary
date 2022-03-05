@@ -2,7 +2,7 @@
 #define GULACHEK_DICTIONARY_HPP
 
 #include <gulachek/gtree.hpp>
-#include <gulachek/gtree/flat_tree.hpp>
+#include <gulachek/gtree/translate.hpp>
 #include <gulachek/gtree/encoding/map.hpp>
 #include <gulachek/gtree/encoding/string.hpp>
 
@@ -16,7 +16,7 @@ namespace gulachek
 	template <typename Key>
 	class basic_dictionary
 	{
-		using map_type = std::map<Key, gtree::flat_tree>;
+		using map_type = std::map<Key, gtree::tree>;
 
 		public:
 			basic_dictionary() = default;
@@ -37,7 +37,7 @@ namespace gulachek
 			{
 				auto &tr = elems_[key];
 
-				if (auto err = tr.write(val))
+				if (auto err = gtree::translate(val, &tr))
 				{
 					cause wrap{"error writing value"};
 					if constexpr (cause_writable<Key>)
@@ -60,7 +60,7 @@ namespace gulachek
 
 				const auto &tr = it->second;
 
-				if (auto err = tr.read(val))
+				if (auto err = gtree::translate(tr, val))
 				{
 					cause wrap{"error reading value"};
 					if constexpr (cause_writable<Key>)
