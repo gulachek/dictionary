@@ -3,6 +3,8 @@ const { CppBuildCommand } = require('gulpachek/cpp');
 const { spawn } = require('child_process');
 const { series } = require('bach');
 
+const { version } = require('./package.json');
+
 const cmd = new Command();
 const cppBuild = new CppBuildCommand({
 	program: cmd,
@@ -14,13 +16,13 @@ function buildLib(args) {
 
 	const dict = cpp.compile({
 		name: 'com.gulachek.dictionary',
-		version: '0.1.0',
+		version,
 		apiDef: 'GULACHEK_DICTIONARY_API'
 	});
 
 	dict.include('include');
 
-	const gtree = cpp.require('com.gulachek.gtree', '0.1.0');
+	const gtree = cpp.require('com.gulachek.gtree', '0.2.0');
 
 	dict.link(gtree);
 

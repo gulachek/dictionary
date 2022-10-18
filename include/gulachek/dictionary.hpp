@@ -20,26 +20,26 @@ namespace gulachek
 		public:
 			basic_dictionary() = default;
 
-			cause gtree_encode(gtree::tree_writer &w) const
+			error gtree_encode(gtree::tree_writer &w) const
 			{
 				return w.write(elems_);
 			}
 
-			cause gtree_decode(gtree::treeder &r)
+			error gtree_decode(gtree::treeder &r)
 			{
 				gtree::decoding<map_type> dec{&elems_};
 				return dec.decode(r);
 			}
 
 			template <gtree::encodable T>
-			cause assign(const Key &key, const T &val)
+			error assign(const Key &key, const T &val)
 			{
 				auto &tr = elems_[key];
 
 				if (auto err = tr.write(val))
 				{
-					cause wrap{"error writing value"};
-					if constexpr (cause_writable<Key>)
+					error wrap{"error writing value"};
+					if constexpr (error_writable<Key>)
 					{
 						wrap << " for key " << key;
 					}
@@ -51,7 +51,7 @@ namespace gulachek
 			}
 
 			template <gtree::encodable T>
-			cause read(const Key &k, T *val) const
+			error read(const Key &k, T *val) const
 			{
 				auto it = elems_.find(k);
 				if (it == elems_.end())
@@ -61,8 +61,8 @@ namespace gulachek
 
 				if (auto err = tr.read(val))
 				{
-					cause wrap{"error reading value"};
-					if constexpr (cause_writable<Key>)
+					error wrap{"error reading value"};
+					if constexpr (error_writable<Key>)
 					{
 						wrap << " for key " << k;
 					}
